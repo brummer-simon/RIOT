@@ -34,6 +34,9 @@
 #endif
 #include "net/sock/ip.h"
 #include "net/sock/udp.h"
+#ifdef MODULE_SOCK_TCP
+#include "net/gnrc/tcp/tcb.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -115,6 +118,17 @@ struct sock_udp {
     sock_udp_ep_t remote;               /**< remote end-point */
     uint16_t flags;                     /**< option flags */
 };
+
+
+#ifdef MODULE_SOCK_TCP
+/**
+ * @brief   TCP sock type
+ * @internal
+ */
+struct sock_tcp {
+    gnrc_tcp_tcb_t tcb;                 /**< TCB holding connection info */
+};
+#endif
 
 #ifdef __cplusplus
 }

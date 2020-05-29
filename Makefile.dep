@@ -149,6 +149,11 @@ ifneq (,$(filter gnrc_sock_udp,$(USEMODULE)))
   USEMODULE += sock_udp
 endif
 
+ifneq (,$(filter gnrc_sock_tcp,$(USEMODULE)))
+  USEMODULE += gnrc_tcp
+  USEMODULE += sock_tcp
+endif
+
 ifneq (,$(filter gnrc_sock,$(USEMODULE)))
   USEMODULE += gnrc_netapi_mbox
   USEMODULE += sock
