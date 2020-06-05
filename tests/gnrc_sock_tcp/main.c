@@ -16,12 +16,10 @@
 #include "net/gnrc/tcp.h"
 
 #define MAIN_QUEUE_SIZE (8)
-//#define BUFFER_SIZE (2049)
-
-
+#define BUFFER_SIZE (2049)
 
 static sock_tcp_t sock;
-//static char buffer[BUFFER_SIZE];
+static char buffer[BUFFER_SIZE];
 
 
 void dump_args(int argc, char **argv)
@@ -35,25 +33,20 @@ void dump_args(int argc, char **argv)
 }
 
 /* API Export for test script */
-/*
 int buffer_init_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
     memset(buffer, '\0', sizeof(buffer));
     return 0;
 }
-*/
 
-/*
 int buffer_get_max_size_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
     printf("%s: returns %d\n", argv[0], BUFFER_SIZE - 1);
     return 0;
 }
-*/
 
-/*
 int buffer_write_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
@@ -66,9 +59,7 @@ int buffer_write_cmd(int argc, char **argv)
     memcpy(dst, src, src_len);
     return 0;
 }
-*/
 
-/*
 int buffer_read_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
@@ -89,7 +80,6 @@ int buffer_read_cmd(int argc, char **argv)
 
     return 0;
 }
-*/
 
 /*
 int gnrc_tcp_ep_from_str_cmd(int argc, char **argv)
@@ -221,17 +211,15 @@ int gnrc_tcp_open_passive_cmd(int argc, char **argv)
 }
 */
 
-/*
-int gnrc_tcp_send_cmd(int argc, char **argv)
+int sock_tcp_write_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
 
-    int timeout = atol(argv[1]);
     size_t to_send = strlen(buffer);
     size_t sent = 0;
 
     while (sent < to_send) {
-        int ret = gnrc_tcp_send(&tcb, buffer + sent, to_send - sent, timeout);
+        int ret = sock_tcp_write(&sock, buffer + sent, to_send - sent);
         switch (ret) {
             case -ENOTCONN:
                 printf("%s: returns -ENOTCONN\n", argv[0]);
@@ -245,8 +233,8 @@ int gnrc_tcp_send_cmd(int argc, char **argv)
                 printf("%s: returns -ECONNABORTED\n", argv[0]);
                 return ret;
 
-            case -ETIMEDOUT:
-                printf("%s: returns -ETIMEDOUT\n", argv[0]);
+            case -ENOMEM:
+                printf("%s: returns -ENOMEM\n", argv[0]);
                 return ret;
         }
         sent += ret;
@@ -256,6 +244,7 @@ int gnrc_tcp_send_cmd(int argc, char **argv)
     return sent;
 }
 
+/*
 int gnrc_tcp_recv_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
@@ -320,6 +309,12 @@ int gnrc_tcp_abort_cmd(int argc, char **argv)
 static const shell_command_t shell_commands[] = {
     { "sock_tcp_connect", "Connect Endpoint", sock_tcp_connect_cmd},
     { "sock_tcp_disconnect", "Disconnect Endpoint", sock_tcp_disconnect_cmd },
+    { "sock_tcp_write", "Send Data from buffer to peer", sock_tcp_write_cmd },
+
+    { "buffer_init", "Clear test buffer", buffer_init_cmd },
+    { "buffer_get_max_size", "Get buffer size", buffer_get_max_size_cmd },
+    { "buffer_write", "Write bytes into buffer", buffer_write_cmd },
+    { "buffer_read", "Read bytes from buffer", buffer_read_cmd },
     { NULL, NULL, NULL }
 };
 

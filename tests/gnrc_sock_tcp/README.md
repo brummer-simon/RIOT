@@ -7,6 +7,11 @@ within this test suite.
 1) 01-conn_lifecycle_as_client.py
     This test covers TCP connection establishment and teardown with GNRC_SOCK_TCP acting as tcp client.
 
+3) 03-send_data.py
+    This test covers sending of a byte stream from GNRC_SOCK_TCP to the host system.
+    The amount of data to send is large enough to force GNRC_SOCK_TCP to split the given stream into
+    multiple packets.
+
 Setup
 ==========
 The test requires a tap-device setup. This can be achieved by running 'dist/tools/tapsetup/tapsetup'
