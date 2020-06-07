@@ -417,13 +417,21 @@ void gnrc_tcp_tcb_init(gnrc_tcp_tcb_t *tcb)
     mutex_init(&(tcb->function_lock));
 }
 
-int gnrc_tcp_open_active(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t local_port)
+int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t local_port)
 {
+    /* Sanity checks */
     assert(tcb != NULL);
     assert(remote != NULL);
     assert(remote->port != PORT_UNSPEC);
 
-    /* Check if given AF-Family in remote is supported */
+    msg_t msg;
+    msg_t msg_queue[TCP_MSG_QUEUE_SIZE];
+    mbox_t mbox = MBOX_INIT(msg_queue, TCP_MSG_QUEUE_SIZE);
+    xtimer_t connection_timeout;
+    cb_arg_t connection_timeout_arg = {MSG_TYPE_CONNECTION_TIMEOUT, &mbox};
+    int ret = 0;
+
+    /* Verify parameters */
 #ifdef MODULE_GNRC_IPV6
     if (remote->family != AF_INET6) {
         return -EAFNOSUPPORT;
@@ -431,14 +439,95 @@ int gnrc_tcp_open_active(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint1
 #else
     return -EAFNOSUPPORT;
 #endif
+    /* Lock the TCB for this function call */
+    mutex_lock(&(tcb->function_lock));
 
-    /* Check if AF-Family for target address matches internally used AF-Family */
-    if (remote->family != tcb->address_family) {
+    if (tcb->address_family != remote->family) {
+        mutex_unlock(&(tcb->function_lock));
         return -EINVAL;
     }
 
-    /* Proceed with connection opening */
-    return _gnrc_tcp_open(tcb, remote, NULL, local_port, 0);
+    /* TCB is already connected: Return -EISCONN */
+    if (tcb->state != FSM_STATE_CLOSED) {
+        mutex_unlock(&(tcb->function_lock));
+        return -EISCONN;
+    }
+
+    /* Parse target address and port number into TCB */
+#ifdef MODULE_GNRC_IPV6
+    if (tcb->address_family == AF_INET6) {
+
+        /* Store Address information in TCB */
+        if (memcpy(tcb->peer_addr, remote->addr.ipv6, sizeof(tcb->peer_addr)) == NULL) {
+            DEBUG("gnrc_tcp.c : _gnrc_tcp_open() : Invalid peer addr\n");
+            mutex_unlock(&(tcb->function_lock));
+            return -EINVAL;
+        }
+        tcb->ll_iface = remote->netif;
+    }
+#endif
+    /* Assign port numbers, verification happens in fsm */
+    tcb->local_port = local_port;
+    tcb->peer_port = remote->port;
+
+    /* Setup messaging */
+    _fsm_set_mbox(tcb, &mbox);
+    _setup_timeout(&connection_timeout, CONFIG_GNRC_TCP_CONNECTION_TIMEOUT_DURATION,
+                   _cb_mbox_put_msg, &connection_timeout_arg);
+
+
+    /* Call FSM with event: CALL_OPEN */
+    ret = _fsm(tcb, FSM_EVENT_CALL_OPEN, NULL, NULL, 0);
+    if (ret == -ENOMEM) {
+        DEBUG("gnrc_tcp.c : _gnrc_tcp_open() : Out of receive buffers.\n");
+    }
+    else if (ret == -EADDRINUSE) {
+        DEBUG("gnrc_tcp.c : _gnrc_tcp_open() : local_port is already in use.\n");
+    }
+
+    /* Wait until a connection was established or closed */
+    while (ret >= 0 && tcb->state != FSM_STATE_CLOSED && tcb->state != FSM_STATE_ESTABLISHED &&
+           tcb->state != FSM_STATE_CLOSE_WAIT) {
+        mbox_get(&mbox, &msg);
+        switch (msg.type) {
+            case MSG_TYPE_NOTIFY_USER:
+                DEBUG("gnrc_tcp.c : _gnrc_tcp_open() : MSG_TYPE_NOTIFY_USER\n");
+                break;
+
+            case MSG_TYPE_CONNECTION_TIMEOUT:
+                DEBUG("gnrc_tcp.c : _gnrc_tcp_open() : CONNECTION_TIMEOUT\n");
+                _fsm(tcb, FSM_EVENT_TIMEOUT_CONNECTION, NULL, NULL, 0);
+                ret = -ETIMEDOUT;
+                break;
+
+            default:
+                DEBUG("gnrc_tcp.c : _gnrc_tcp_open() : other message type\n");
+        }
+    }
+
+    /* Cleanup */
+    _fsm_set_mbox(tcb, NULL);
+    xtimer_remove(&connection_timeout);
+    if (tcb->state == FSM_STATE_CLOSED && ret == 0) {
+        ret = -ECONNREFUSED;
+    }
+    mutex_unlock(&(tcb->function_lock));
+    return ret;
+}
+
+int gnrc_tcp_listen(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local)
+{
+    /* TODO */
+    (void) tcb;
+    (void) local;
+    return -1;
+}
+
+int gnrc_tcp_accept(gnrc_tcp_tcb_t *tcb)
+{
+    /* TODO */
+    (void) tcb;
+    return -1;
 }
 
 int gnrc_tcp_open_passive(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local)
@@ -747,6 +836,12 @@ void gnrc_tcp_abort(gnrc_tcp_tcb_t *tcb)
     /* Cleanup */
     _rcvbuf_release_buffer(tcb);
     mutex_unlock(&(tcb->function_lock));
+}
+
+void gnrc_tcp_stop_listen(gnrc_tcp_tcb_t *tcb)
+{
+    /* TODO */
+    (void) tcb;
 }
 
 int gnrc_tcp_calc_csum(const gnrc_pktsnip_t *hdr, const gnrc_pktsnip_t *pseudo_hdr)

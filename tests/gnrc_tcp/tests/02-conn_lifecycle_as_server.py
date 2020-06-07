@@ -37,14 +37,17 @@ def testfunc(child):
 
     # Setup RIOT Node wait for incoming connections from host system
     child.sendline('gnrc_tcp_tcb_init')
-    child.sendline('gnrc_tcp_open_passive [::]:{}'.format(str(port)))
+    child.sendline('gnrc_tcp_listen [::]:{}'.format(str(port)))
+    child.expect_exact('gnrc_tcp_listen: returns 0')
 
     client_handle.start()
-    child.expect_exact('gnrc_tcp_open_passive: returns 0')
+    child.expect_exact('gnrc_tcp_accept 0')
+    child.expect_exact('gnrc_tcp_accept: returns 0')
 
     # Close connection and verify that pktbuf is cleared
     shutdown_event.set()
     child.sendline('gnrc_tcp_close')
+    child.sendline('gnrc_tcp_stop_listen')
     client_handle.join()
 
     verify_pktbuf_empty(child)
