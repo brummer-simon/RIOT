@@ -12,6 +12,10 @@ within this test suite.
     The amount of data to send is large enough to force GNRC_SOCK_TCP to split the given stream into
     multiple packets.
 
+4) 04-receive_data.py
+    This test covers receiving of a byte stream from the host system. The received data is
+    causing window opening and closing as well as data transmission over multiple packets.
+
 Setup
 ==========
 The test requires a tap-device setup. This can be achieved by running 'dist/tools/tapsetup/tapsetup'

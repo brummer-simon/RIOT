@@ -244,8 +244,8 @@ int sock_tcp_write_cmd(int argc, char **argv)
     return sent;
 }
 
-/*
-int gnrc_tcp_recv_cmd(int argc, char **argv)
+
+int sock_tcp_read_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
 
@@ -254,7 +254,7 @@ int gnrc_tcp_recv_cmd(int argc, char **argv)
     size_t rcvd = 0;
 
     while (rcvd < to_receive) {
-        int ret = gnrc_tcp_recv(&tcb, buffer + rcvd, to_receive - rcvd,
+        int ret = sock_tcp_read(&sock, buffer + rcvd, to_receive - rcvd,
                                 timeout);
         switch (ret) {
             case 0:
@@ -287,7 +287,7 @@ int gnrc_tcp_recv_cmd(int argc, char **argv)
     printf("%s: received %u\n", argv[0], (unsigned)rcvd);
     return 0;
 }
-*/
+
 
 int sock_tcp_disconnect_cmd(int argc, char **argv)
 {
@@ -309,7 +309,8 @@ int gnrc_tcp_abort_cmd(int argc, char **argv)
 static const shell_command_t shell_commands[] = {
     { "sock_tcp_connect", "Connect Endpoint", sock_tcp_connect_cmd},
     { "sock_tcp_disconnect", "Disconnect Endpoint", sock_tcp_disconnect_cmd },
-    { "sock_tcp_write", "Send Data from buffer to peer", sock_tcp_write_cmd },
+    { "sock_tcp_write", "Send Data to peer", sock_tcp_write_cmd },
+    { "sock_tcp_read", "Read Data from peer", sock_tcp_read_cmd },
 
     { "buffer_init", "Clear test buffer", buffer_init_cmd },
     { "buffer_get_max_size", "Get buffer size", buffer_get_max_size_cmd },

@@ -114,11 +114,7 @@ ssize_t sock_tcp_read(sock_tcp_t *sock, void *data, size_t max_len,
     assert(data != NULL);
     assert(max_len > 0);
 
-    (void) sock;
-    (void) data;
-    (void) max_len;
-    (void) timeout;
-    return -ENOSYS;
+    return gnrc_tcp_recv(&(sock->tcb), data, max_len, timeout);
 }
 
 ssize_t sock_tcp_write(sock_tcp_t *sock, const void *data, size_t len)
@@ -129,6 +125,6 @@ ssize_t sock_tcp_write(sock_tcp_t *sock, const void *data, size_t len)
 
     // No need for remapping error codes, they are the same except:
     // 1) -ETIMEDOUT (Can't be returned, timeout is infinite)
-    // 2) -ENOMEM (Can't be returned, gnrc preallocated receive buffer)
+    // 2) -ENOMEM (Can't happen, GNRC_TCP preallocates the receive buffer)
     return gnrc_tcp_send(&(sock->tcb), data, len, 0);
 }
