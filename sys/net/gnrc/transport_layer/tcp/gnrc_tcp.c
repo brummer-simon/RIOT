@@ -515,17 +515,21 @@ int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t loc
     return ret;
 }
 
-int gnrc_tcp_listen(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local)
+int gnrc_tcp_listen(gnrc_tcp_tcb_queue_t *queue, const gnrc_tcp_ep_t *local,
+                    gnrc_tcp_tcb_t *tcbs, size_t tcbs_len)
 {
-    /* TODO */
-    (void) tcb;
+    /* TODO: Implement me */
+    (void) queue;
     (void) local;
+    (void) tcbs;
+    (void) tcbs_len;
     return -1;
 }
 
-int gnrc_tcp_accept(gnrc_tcp_tcb_t *tcb)
+int gnrc_tcp_accept(gnrc_tcp_tcb_queue_t *queue, gnrc_tcp_tcb_t **tcb)
 {
-    /* TODO */
+    /* TODO: Implement me */
+    (void) queue;
     (void) tcb;
     return -1;
 }
@@ -838,10 +842,10 @@ void gnrc_tcp_abort(gnrc_tcp_tcb_t *tcb)
     mutex_unlock(&(tcb->function_lock));
 }
 
-void gnrc_tcp_stop_listen(gnrc_tcp_tcb_t *tcb)
+void gnrc_tcp_stop_listen(gnrc_tcp_tcb_queue_t *queue)
 {
-    /* TODO */
-    (void) tcb;
+    /* TODO: Implement me */
+    (void) queue;
 }
 
 int gnrc_tcp_calc_csum(const gnrc_pktsnip_t *hdr, const gnrc_pktsnip_t *pseudo_hdr)

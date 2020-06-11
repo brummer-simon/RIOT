@@ -129,11 +129,12 @@ void gnrc_tcp_tcb_init(gnrc_tcp_tcb_t *tcb);
 int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
                   uint16_t local_port);
 
-/* TODO */
-int gnrc_tcp_listen(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local);
+/* TODO: Document me */
+int gnrc_tcp_listen(gnrc_tcp_tcb_queue_t *queue, const gnrc_tcp_ep_t *local,
+                    gnrc_tcp_tcb_t *tcbs, size_t tcbs_len);
 
-/* TODO */
-int gnrc_tcp_accept(gnrc_tcp_tcb_t *tcb);
+/* TODO: Document me */
+int gnrc_tcp_accept(gnrc_tcp_tcb_queue_t *queue, gnrc_tcp_tcb_t **tcb);
 
 /**
  * @brief Opens a connection passively, by waiting for an incoming request.
@@ -236,8 +237,8 @@ void gnrc_tcp_close(gnrc_tcp_tcb_t *tcb);
  */
 void gnrc_tcp_abort(gnrc_tcp_tcb_t *tcb);
 
-/* TODO */
-void gnrc_tcp_stop_listen(gnrc_tcp_tcb_t *tcb);
+/* TODO: Document me */
+void gnrc_tcp_stop_listen(gnrc_tcp_tcb_queue_t *queue);
 
 /**
  * @brief Calculate and set checksum in TCP header.
