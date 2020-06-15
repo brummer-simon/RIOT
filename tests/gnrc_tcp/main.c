@@ -187,8 +187,6 @@ int gnrc_tcp_listen_cmd(int argc, char **argv)
 
     int err = gnrc_tcp_listen(&queue, &local, tcbs, TCB_QUEUE_SIZE);
     switch (err) {
-        /* TODO: Define return values */
-        /*
         case -EAFNOSUPPORT:
             printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
             break;
@@ -204,7 +202,7 @@ int gnrc_tcp_listen_cmd(int argc, char **argv)
         case -ENOMEM:
             printf("%s: returns -ENOMEM\n", argv[0]);
             break;
-        */
+
         default:
             printf("%s: returns %d\n", argv[0], err);
     }
