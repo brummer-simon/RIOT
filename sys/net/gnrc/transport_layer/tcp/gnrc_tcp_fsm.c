@@ -211,7 +211,7 @@ static int _fsm_call_open(gnrc_tcp_tcb_t *tcb)
     DEBUG("gnrc_tcp_fsm.c : _fsm_call_open()\n");
     tcb->rcv_wnd = CONFIG_GNRC_TCP_DEFAULT_WINDOW;
 
-    if (tcb->status & STATUS_PASSIVE) {
+    if (tcb->status & STATUS_LISTENING) {
         /* Passive open, T: CLOSED -> LISTEN */
         _transition_to(tcb, FSM_STATE_LISTEN);
     }
@@ -575,7 +575,7 @@ static int _fsm_rcvd_pkt(gnrc_tcp_tcb_t *tcb, gnrc_pktsnip_t *in_pkt)
         /* 2) Check RST: If RST is set ... */
         if (ctl & MSK_RST) {
             /* .. and state is SYN_RCVD and the connection is passive: SYN_RCVD -> LISTEN */
-            if (tcb->state == FSM_STATE_SYN_RCVD && (tcb->status & STATUS_PASSIVE)) {
+            if (tcb->state == FSM_STATE_SYN_RCVD && (tcb->status & STATUS_LISTENING)) {
                 if (_transition_to(tcb, FSM_STATE_LISTEN) == -ENOMEM) {
                     _transition_to(tcb, FSM_STATE_CLOSED);
                     return -ENOMEM;

@@ -147,7 +147,7 @@ static int _gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
     /* Setup passive connection */
     if (passive) {
         /* Mark connection as passive opend */
-        tcb->status |= STATUS_PASSIVE;
+        tcb->status |= STATUS_LISTENING;
 #ifdef MODULE_GNRC_IPV6
         /* If local address is specified: Copy it into TCB */
         if (local_addr && tcb->address_family == AF_INET6) {
@@ -212,10 +212,9 @@ static int _gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
                 /* Setup a timeout to be able to revert back to LISTEN state, in case the
                  * send SYN+ACK we received upon entering SYN_RCVD is never acknowledged
                  * by the peer. */
-                if ((tcb->state == FSM_STATE_SYN_RCVD) && (tcb->status & STATUS_PASSIVE)) {
-                    _setup_timeout(&(tcb->timer_misc),
-                                   CONFIG_GNRC_TCP_CONNECTION_TIMEOUT_DURATION, _cb_mbox_put_msg,
-                                   &connection_timeout_arg);
+                if ((tcb->state == FSM_STATE_SYN_RCVD) && (tcb->status & STATUS_LISTENING)) {
+                    _setup_timeout(&(tcb->timer_misc), CONFIG_GNRC_TCP_CONNECTION_TIMEOUT_DURATION,
+                                   _cb_mbox_put_msg, &connection_timeout_arg);
                 }
                 break;
 
@@ -226,7 +225,7 @@ static int _gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
                  * 1) Active connections return -ETIMEOUT.
                  * 2) Passive connections stop the ongoing retransmissions and repeat the
                  *    open call to wait for the next connection attempt. */
-                if (tcb->status & STATUS_PASSIVE) {
+                if (tcb->status & STATUS_LISTENING) {
                     _fsm(tcb, FSM_EVENT_CLEAR_RETRANSMIT, NULL, NULL, 0);
                     _fsm(tcb, FSM_EVENT_CALL_OPEN, NULL, NULL, 0);
                 }
@@ -566,7 +565,7 @@ int gnrc_tcp_listen(gnrc_tcp_tcb_queue_t *queue, const gnrc_tcp_ep_t *local,
             }
 #endif
             tcb->local_port = local->port;
-            tcb->status |= STATUS_PASSIVE;
+            tcb->status |= STATUS_LISTENING;
 
             /* Open connection */
             ret = _fsm(tcb, FSM_EVENT_CALL_OPEN, NULL, NULL, 0);
