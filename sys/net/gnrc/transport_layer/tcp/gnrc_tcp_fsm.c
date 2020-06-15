@@ -25,7 +25,6 @@
 #include "internal/common.h"
 #include "internal/pkt.h"
 #include "internal/option.h"
-#include "internal/rcvbuf.h"
 #include "internal/fsm.h"
 
 #ifdef MODULE_GNRC_IPV6
@@ -131,8 +130,6 @@ static int _transition_to(gnrc_tcp_tcb_t *tcb, fsm_state_t state)
             LL_DELETE(_list_tcb_head, tcb);
             mutex_unlock(&_list_tcb_lock);
 
-            /* Free potentially allocated receive buffer */
-            _rcvbuf_release_buffer(tcb);
             tcb->status |= STATUS_NOTIFY_USER;
             break;
 
@@ -148,11 +145,6 @@ static int _transition_to(gnrc_tcp_tcb_t *tcb, fsm_state_t state)
 #endif
             tcb->peer_port = PORT_UNSPEC;
 
-            /* Allocate receive buffer */
-            if (_rcvbuf_get_buffer(tcb) == -ENOMEM) {
-                return -ENOMEM;
-            }
-
             /* Add connection to active connections (if not already active) */
             mutex_lock(&_list_tcb_lock);
             LL_SEARCH(_list_tcb_head, iter, tcb, TCB_EQUAL);
@@ -163,11 +155,6 @@ static int _transition_to(gnrc_tcp_tcb_t *tcb, fsm_state_t state)
             break;
 
         case FSM_STATE_SYN_SENT:
-            /* Allocate rceveive buffer */
-            if (_rcvbuf_get_buffer(tcb) == -ENOMEM) {
-                return -ENOMEM;
-            }
-
             /* Add connection to active connections (if not already active) */
             mutex_lock(&_list_tcb_lock);
             LL_SEARCH(_list_tcb_head, iter, tcb, TCB_EQUAL);
@@ -178,7 +165,6 @@ static int _transition_to(gnrc_tcp_tcb_t *tcb, fsm_state_t state)
                     /* Check if given port number is use: return error and release buffer */
                     if (_is_local_port_in_use(tcb->local_port)) {
                         mutex_unlock(&_list_tcb_lock);
-                        _rcvbuf_release_buffer(tcb);
                         return -EADDRINUSE;
                     }
                 }
@@ -226,10 +212,7 @@ static int _fsm_call_open(gnrc_tcp_tcb_t *tcb)
 
     if (tcb->status & STATUS_PASSIVE) {
         /* Passive open, T: CLOSED -> LISTEN */
-        if (_transition_to(tcb, FSM_STATE_LISTEN) == -ENOMEM) {
-            _transition_to(tcb, FSM_STATE_CLOSED);
-            return -ENOMEM;
-        }
+        _transition_to(tcb, FSM_STATE_LISTEN);
     }
     else {
         /* Active Open, set TCB values, send SYN, T: CLOSED -> SYN_SENT */
