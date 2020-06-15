@@ -575,7 +575,8 @@ int gnrc_tcp_listen(gnrc_tcp_tcb_queue_t *queue, const gnrc_tcp_ep_t *local,
          * close all connections that were opened up to this point.
          */
         if (ret) {
-            for (size_t j = 0; j < i; ++j) {
+            for (size_t j = 0; j <= i; ++j) {
+                tcb->status &= ~(STATUS_LISTENING);
                 _fsm(&(tcbs[j]), FSM_EVENT_CALL_ABORT, NULL, NULL, 0);
             }
             break;

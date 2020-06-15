@@ -179,8 +179,20 @@ static int _transition_to(gnrc_tcp_tcb_t *tcb, fsm_state_t state)
             break;
 
         case FSM_STATE_SYN_RCVD:
+            /* Setup Timeout used to revert back into the listening state if our SYN never gets ACKed */
+            if (tcb->status & STATUS_LISTENING) {
+                tcb->msg_misc.type = MSG_TYPE_CONNECTION_TIMEOUT;
+                tcb->msg_misc.content.ptr = tcb;
+                xtimer_set_msg(&tcb->timer_misc, CONFIG_GNRC_TCP_CONNECTION_TIMEOUT_DURATION,
+                               &tcb->msg_misc, gnrc_tcp_pid);
+            }
+            break;
+
         case FSM_STATE_ESTABLISHED:
         case FSM_STATE_CLOSE_WAIT:
+            if (tcb->status & STATUS_LISTENING) {
+                xtimer(&tcb->timer_misc);
+            }
             tcb->status |= STATUS_NOTIFY_USER;
             break;
 
@@ -482,7 +494,6 @@ static int _fsm_rcvd_pkt(gnrc_tcp_tcb_t *tcb, gnrc_pktsnip_t *in_pkt)
             DEBUG("gnrc_tcp_fsm.c : _fsm_rcvd_pkt() : Received address was not stored\n");
             return 0;
 #endif
-
             tcb->local_port = dst;
             tcb->peer_port = src;
             tcb->irs = byteorder_ntohl(tcp_hdr->seq_num);

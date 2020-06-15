@@ -294,6 +294,16 @@ void *_event_loop(__attribute__((unused)) void *arg)
                      NULL, NULL, 0);
                 break;
 
+            /* A connection opening attept from a TCB in listening mode failed.
+             * Clear retransmission an re-open for incomming connections. */
+            case MSG_TYPE_CONNECTION_TIMEOUT:
+                DEBUG("gnrc_tcp_eventloop.c : _event_loop() : MSG_TYPE_CONNECTION_TIMEOUT");
+                _fsm((gnrc_tcp_tcb_t *)msg.content.ptr, FSM_EVENT_CLEAR_RETRANSMIT,
+                     NULL, NULL, 0);
+                _fsm((gnrc_tcp_tcb_t *)msg.content.ptr, FSM_EVENT_CALL_OPEN,
+                     NULL, NULL, 0);
+                break;
+
             default:
                 DEBUG("gnrc_tcp_eventloop.c : _event_loop() : received expected message\n");
         }
