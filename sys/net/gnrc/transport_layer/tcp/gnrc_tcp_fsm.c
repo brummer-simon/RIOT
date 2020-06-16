@@ -191,7 +191,7 @@ static int _transition_to(gnrc_tcp_tcb_t *tcb, fsm_state_t state)
         case FSM_STATE_ESTABLISHED:
         case FSM_STATE_CLOSE_WAIT:
             if (tcb->status & STATUS_LISTENING) {
-                xtimer(&tcb->timer_misc);
+                xtimer_remove(&tcb->timer_misc);
             }
             tcb->status |= STATUS_NOTIFY_USER;
             break;
