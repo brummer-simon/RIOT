@@ -125,75 +125,122 @@ int gnrc_tcp_tcb_init_cmd(int argc, char **argv)
     return 0;
 }
 
-int gnrc_tcp_open_active_cmd(int argc, char **argv)
+/* TODO: Remove me */
+//int gnrc_tcp_open_active_cmd(int argc, char **argv)
+//{
+//    dump_args(argc, argv);
+//
+//    gnrc_tcp_ep_t remote;
+//    gnrc_tcp_ep_from_str(&remote, argv[1]);
+//    uint16_t local_port = atol(argv[2]);
+//
+//    int err = gnrc_tcp_open_active(&tcb, &remote, local_port);
+//    switch (err) {
+//        case -EAFNOSUPPORT:
+//            printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
+//            break;
+//
+//        case -EINVAL:
+//            printf("%s: returns -EINVAL\n", argv[0]);
+//            break;
+//
+//        case -EISCONN:
+//            printf("%s: returns -EISCONN\n", argv[0]);
+//            break;
+//
+//        case -ENOMEM:
+//            printf("%s: returns -ENOMEM\n", argv[0]);
+//            break;
+//
+//        case -EADDRINUSE:
+//            printf("%s: returns -EADDRINUSE\n", argv[0]);
+//            break;
+//
+//        case -ETIMEDOUT:
+//            printf("%s: returns -ETIMEOUT\n", argv[0]);
+//            break;
+//
+//        case -ECONNREFUSED:
+//            printf("%s: returns -ECONNREFUSED\n", argv[0]);
+//            break;
+//
+//        default:
+//            printf("%s: returns %d\n", argv[0], err);
+//    }
+//    return err;
+//}
+int gnrc_tcp_open_cmd(int argc, char **argv)
 {
+    /* TODO: Implement me */
     dump_args(argc, argv);
 
     gnrc_tcp_ep_t remote;
     gnrc_tcp_ep_from_str(&remote, argv[1]);
     uint16_t local_port = atol(argv[2]);
 
-    int err = gnrc_tcp_open_active(&tcb, &remote, local_port);
+    int err = gnrc_tcp_open(&tcb, &remote, local_port);
     switch (err) {
-        case -EAFNOSUPPORT:
-            printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
-            break;
-
-        case -EINVAL:
-            printf("%s: returns -EINVAL\n", argv[0]);
-            break;
-
-        case -EISCONN:
-            printf("%s: returns -EISCONN\n", argv[0]);
-            break;
-
-        case -ENOMEM:
-            printf("%s: returns -ENOMEM\n", argv[0]);
-            break;
-
-        case -EADDRINUSE:
-            printf("%s: returns -EADDRINUSE\n", argv[0]);
-            break;
-
-        case -ETIMEDOUT:
-            printf("%s: returns -ETIMEOUT\n", argv[0]);
-            break;
-
-        case -ECONNREFUSED:
-            printf("%s: returns -ECONNREFUSED\n", argv[0]);
-            break;
-
         default:
             printf("%s: returns %d\n", argv[0], err);
     }
     return err;
 }
 
-int gnrc_tcp_open_passive_cmd(int argc, char **argv)
+/* TODO: Remove me */
+//int gnrc_tcp_open_passive_cmd(int argc, char **argv)
+//{
+//    dump_args(argc, argv);
+//
+//    gnrc_tcp_ep_t local;
+//    gnrc_tcp_ep_from_str(&local, argv[1]);
+//
+//    int err = gnrc_tcp_open_passive(&tcb, &local);
+//    switch (err) {
+//        case -EAFNOSUPPORT:
+//            printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
+//            break;
+//
+//        case -EINVAL:
+//            printf("%s: returns -EINVAL\n", argv[0]);
+//            break;
+//
+//        case -EISCONN:
+//            printf("%s: returns -EISCONN\n", argv[0]);
+//            break;
+//
+//        case -ENOMEM:
+//            printf("%s: returns -ENOMEM\n", argv[0]);
+//            break;
+//
+//        default:
+//            printf("%s: returns %d\n", argv[0], err);
+//    }
+//    return err;
+//}
+
+int gnrc_tcp_listen_cmd(int argc, char **argv)
 {
+    /* TODO: Implement me */
     dump_args(argc, argv);
 
     gnrc_tcp_ep_t local;
     gnrc_tcp_ep_from_str(&local, argv[1]);
 
-    int err = gnrc_tcp_open_passive(&tcb, &local);
+    int err = gnrc_tcp_listen(&tcb, &local);
     switch (err) {
-        case -EAFNOSUPPORT:
-            printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
-            break;
+        default:
+            printf("%s: returns %d\n", argv[0], err);
+    }
+    return err;
+}
 
-        case -EINVAL:
-            printf("%s: returns -EINVAL\n", argv[0]);
-            break;
+int gnrc_tcp_accept_cmd(int argc, char **argv)
+{
+    /* TODO: Implement me */
+    dump_args(argc, argv);
 
-        case -EISCONN:
-            printf("%s: returns -EISCONN\n", argv[0]);
-            break;
-
-        case -ENOMEM:
-            printf("%s: returns -ENOMEM\n", argv[0]);
-            break;
-
+    int err = gnrc_tcp_accept(&tcb);
+    switch (err) {
         default:
             printf("%s: returns %d\n", argv[0], err);
     }
@@ -291,15 +338,28 @@ int gnrc_tcp_abort_cmd(int argc, char **argv)
     return 0;
 }
 
+int gnrc_tcp_stop_listen_cmd(int argc, char **argv)
+{
+    /* TODO: Implement me */
+    dump_args(argc, argv);
+    gnrc_tcp_stop_listen(&tcb);
+    return 0;
+}
+
 /* Exporting GNRC TCP Api to for shell usage */
 static const shell_command_t shell_commands[] = {
     { "gnrc_tcp_ep_from_str", "Build endpoint from string",
       gnrc_tcp_ep_from_str_cmd },
     { "gnrc_tcp_tcb_init", "gnrc_tcp: init tcb", gnrc_tcp_tcb_init_cmd },
-    { "gnrc_tcp_open_active", "gnrc_tcp: open active connection",
-      gnrc_tcp_open_active_cmd },
-    { "gnrc_tcp_open_passive", "gnrc_tcp: open passive connection",
-      gnrc_tcp_open_passive_cmd },
+/* TODO: Remove me */
+//    { "gnrc_tcp_open_active", "gnrc_tcp: open active connection",
+//      gnrc_tcp_open_active_cmd },
+//    { "gnrc_tcp_open_passive", "gnrc_tcp: open passive connection",
+//      gnrc_tcp_open_passive_cmd },
+    { "gnrc_tcp_open", "gnrc_tcp: open connection", gnrc_tcp_open_cmd },
+    { "gnrc_tcp_listen", "gnrc_tcp: listen for connection",
+      gnrc_tcp_listen_cmd },
+    { "gnrc_tcp_accept", "gnrc_tcp: accept connection", gnrc_tcp_accept_cmd },
     { "gnrc_tcp_send", "gnrc_tcp: send data to connected peer",
       gnrc_tcp_send_cmd },
     { "gnrc_tcp_recv", "gnrc_tcp: recv data from connected peer",
@@ -308,6 +368,8 @@ static const shell_command_t shell_commands[] = {
       gnrc_tcp_close_cmd },
     { "gnrc_tcp_abort", "gnrc_tcp: close connection forcefully",
       gnrc_tcp_abort_cmd },
+    { "gnrc_tcp_stop_listen", "gnrc_tcp: stop listening",
+      gnrc_tcp_stop_listen_cmd },
     { "buffer_init", "init internal buffer", buffer_init_cmd },
     { "buffer_get_max_size", "get max size of internal buffer",
       buffer_get_max_size_cmd },

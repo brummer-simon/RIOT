@@ -101,58 +101,69 @@ int gnrc_tcp_init(void);
  */
 void gnrc_tcp_tcb_init(gnrc_tcp_tcb_t *tcb);
 
-/**
- * @brief Opens a connection actively.
- *
- * @pre gnrc_tcp_tcb_init() must have been successfully called.
- * @pre @p tcb must not be NULL
- * @pre @p remote must not be NULL.
- *
- * @note Blocks until a connection has been established or an error occurred.
- *
- * @param[in,out] tcb          TCB holding the connection information.
- * @param[in]     remote       Remote endpoint of the host to connect to.
- * @param[in]     local_port   If zero or PORT_UNSPEC, the connections source port
- *                             is randomly chosen. If local_port is non-zero
- *                             the local_port is used as source port.
- *
- * @return   0 on success.
- * @return   -EAFNOSUPPORT if @p address_family is not supported.
- * @return   -EINVAL if @p address_family is not the same the address_family use by the TCB.
- *                    or @p target_addr is invalid.
- * @return   -EISCONN if TCB is already in use.
- * @return   -ENOMEM if the receive buffer for the TCB could not be allocated.
- * @return   -EADDRINUSE if @p local_port is already used by another connection.
- * @return   -ETIMEDOUT if the connection could not be opened.
- * @return   -ECONNREFUSED if the connection was reset by the peer.
- */
-int gnrc_tcp_open_active(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
-                         uint16_t local_port);
+/* TODO: Remove me */
+///**
+// * @brief Opens a connection actively.
+// *
+// * @pre gnrc_tcp_tcb_init() must have been successfully called.
+// * @pre @p tcb must not be NULL
+// * @pre @p remote must not be NULL.
+// *
+// * @note Blocks until a connection has been established or an error occurred.
+// *
+// * @param[in,out] tcb          TCB holding the connection information.
+// * @param[in]     remote       Remote endpoint of the host to connect to.
+// * @param[in]     local_port   If zero or PORT_UNSPEC, the connections source port
+// *                             is randomly chosen. If local_port is non-zero
+// *                             the local_port is used as source port.
+// *
+// * @return   0 on success.
+// * @return   -EAFNOSUPPORT if @p address_family is not supported.
+// * @return   -EINVAL if @p address_family is not the same the address_family use by the TCB.
+// *                    or @p target_addr is invalid.
+// * @return   -EISCONN if TCB is already in use.
+// * @return   -ENOMEM if the receive buffer for the TCB could not be allocated.
+// * @return   -EADDRINUSE if @p local_port is already used by another connection.
+// * @return   -ETIMEDOUT if the connection could not be opened.
+// * @return   -ECONNREFUSED if the connection was reset by the peer.
+// */
+//int gnrc_tcp_open_active(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
+//                         uint16_t local_port);
 
-/**
- * @brief Opens a connection passively, by waiting for an incoming request.
- *
- * @pre gnrc_tcp_tcb_init() must have been successfully called.
- * @pre @p tcb must not be NULL.
- * @pre @p local must not be NULL.
- * @pre port in @p local must not be zero.
- *
- * @note Blocks until a connection has been established (incoming connection request
- *       to @p local_port) or an error occurred.
- *
- * @param[in,out] tcb     TCB holding the connection information.
- * @param[in]     local   Endpoint specifying the port and address used to wait for
- *                        incoming connections.
- *
- * @return   0 on success.
- * @return   -EAFNOSUPPORT if local_addr != NULL and @p address_family is not supported.
- * @return   -EINVAL if @p address_family is not the same the address_family used in TCB.
- *                    or the address in @p local is invalid.
- * @return   -EISCONN if TCB is already in use.
- * @return   -ENOMEM if the receive buffer for the TCB could not be allocated.
- *            Hint: Increase "CONFIG_GNRC_TCP_RCV_BUFFERS".
- */
-int gnrc_tcp_open_passive(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local);
+/* TODO: Add documentation */
+int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t local_port);
+
+/* TODO: Add documentation */
+int gnrc_tcp_listen(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local);
+
+/* TODO: Add documentation */
+int gnrc_tcp_accept(gnrc_tcp_tcb_t *tcb);
+
+/* TODO: Remove me */
+///**
+// * @brief Opens a connection passively, by waiting for an incoming request.
+// *
+// * @pre gnrc_tcp_tcb_init() must have been successfully called.
+// * @pre @p tcb must not be NULL.
+// * @pre @p local must not be NULL.
+// * @pre port in @p local must not be zero.
+// *
+// * @note Blocks until a connection has been established (incoming connection request
+// *       to @p local_port) or an error occurred.
+// *
+// * @param[in,out] tcb     TCB holding the connection information.
+// * @param[in]     local   Endpoint specifying the port and address used to wait for
+// *                        incoming connections.
+// *
+// * @return   0 on success.
+// * @return   -EAFNOSUPPORT if local_addr != NULL and @p address_family is not supported.
+// * @return   -EINVAL if @p address_family is not the same the address_family used in TCB.
+// *                    or the address in @p local is invalid.
+// * @return   -EISCONN if TCB is already in use.
+// * @return   -ENOMEM if the receive buffer for the TCB could not be allocated.
+// *            Hint: Increase "CONFIG_GNRC_TCP_RCV_BUFFERS".
+// */
+//int gnrc_tcp_open_passive(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local);
 
 /**
  * @brief Transmit data to connected peer.
@@ -229,6 +240,9 @@ void gnrc_tcp_close(gnrc_tcp_tcb_t *tcb);
  * @param[in,out] tcb   TCB holding the connection information.
  */
 void gnrc_tcp_abort(gnrc_tcp_tcb_t *tcb);
+
+/* TODO: Add documentation */
+void gnrc_tcp_stop_listen(gnrc_tcp_tcb_t *tcb);
 
 /**
  * @brief Calculate and set checksum in TCP header.
