@@ -169,9 +169,9 @@ int gnrc_tcp_tcb_init_cmd(int argc, char **argv)
 //    }
 //    return err;
 //}
+
 int gnrc_tcp_open_cmd(int argc, char **argv)
 {
-    /* TODO: Implement me */
     dump_args(argc, argv);
 
     gnrc_tcp_ep_t remote;
@@ -180,6 +180,34 @@ int gnrc_tcp_open_cmd(int argc, char **argv)
 
     int err = gnrc_tcp_open(&tcb, &remote, local_port);
     switch (err) {
+        case -EAFNOSUPPORT:
+            printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
+            break;
+
+        case -EINVAL:
+            printf("%s: returns -EINVAL\n", argv[0]);
+            break;
+
+        case -EISCONN:
+            printf("%s: returns -EISCONN\n", argv[0]);
+            break;
+
+        case -ENOMEM:
+            printf("%s: returns -ENOMEM\n", argv[0]);
+            break;
+
+        case -EADDRINUSE:
+            printf("%s: returns -EADDRINUSE\n", argv[0]);
+            break;
+
+        case -ETIMEDOUT:
+            printf("%s: returns -ETIMEOUT\n", argv[0]);
+            break;
+
+        case -ECONNREFUSED:
+            printf("%s: returns -ECONNREFUSED\n", argv[0]);
+            break;
+
         default:
             printf("%s: returns %d\n", argv[0], err);
     }

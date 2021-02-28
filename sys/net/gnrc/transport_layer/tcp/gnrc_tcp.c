@@ -488,11 +488,114 @@ void gnrc_tcp_tcb_init(gnrc_tcp_tcb_t *tcb)
 
 int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t local_port)
 {
-    /* TODO: Implement me */
-    (void) tcb;
-    (void) remote;
-    (void) local_port;
-    return -1;
+    /* Sanity checking */
+    TCP_DEBUG_ENTER;
+    assert(tcb != NULL);
+    assert(remote != NULL);
+    assert(remote->port != PORT_UNSPEC);
+
+    msg_t msg;
+    msg_t msg_queue[TCP_MSG_QUEUE_SIZE];
+    mbox_t mbox = MBOX_INIT(msg_queue, TCP_MSG_QUEUE_SIZE);
+    int ret = 0;
+
+    /* Verify remote ep */
+#ifdef MODULE_GNRC_IPV6
+    if (remote->family != AF_INET6) {
+        TCP_DEBUG_ERROR("-EAFNOSUPPORT: remote AF-Family not supported.");
+        TCP_DEBUG_LEAVE;
+        return -EAFNOSUPPORT;
+    }
+#else
+    TCP_DEBUG_ERROR("-EAFNOSUPPORT: AF-Family not supported.");
+    TCP_DEBUG_LEAVE;
+    return -EAFNOSUPPORT;
+#endif
+
+    /* Protect TCB against usage in other TCP functions */
+    mutex_lock(&(tcb->function_lock));
+
+    /* Check if AF-Family for target address matches internally used AF-Family */
+    if (remote->family != tcb->address_family) {
+        mutex_unlock(&(tcb->function_lock));
+        TCP_DEBUG_ERROR("-EINVAL: local and remote AF-Family don't match.");
+        TCP_DEBUG_LEAVE;
+        return -EINVAL;
+    }
+
+
+    /* TCB is already connected: Return -EISCONN */
+    if (tcb->state != FSM_STATE_CLOSED) {
+        mutex_unlock(&(tcb->function_lock));
+        TCP_DEBUG_ERROR("-EISCONN: TCB already connected.");
+        TCP_DEBUG_LEAVE;
+        return -EISCONN;
+    }
+
+    /* Setup messaging */
+    _gnrc_tcp_fsm_set_mbox(tcb, &mbox);
+
+    /* Parse target address and port number into TCB */
+#ifdef MODULE_GNRC_IPV6
+    if (tcb->address_family == AF_INET6) {
+
+        /* Store Address information in TCB */
+        if (memcpy(tcb->peer_addr, remote->addr.ipv6, sizeof(tcb->peer_addr)) == NULL) {
+            TCP_DEBUG_ERROR("-EINVAL: Invalid peer address.");
+            TCP_DEBUG_LEAVE;
+            return -EINVAL;
+        }
+        tcb->ll_iface = remote->netif;
+    }
+#endif
+
+    /* Assign port numbers, verification happens during connection establishment. */
+    tcb->local_port = local_port;
+    tcb->peer_port = remote->port;
+
+    /* Setup connection timeout */
+    _sched_connection_timeout(&tcb->event_misc, &mbox);
+
+    /* Call FSM with event: CALL_OPEN */
+    ret = _gnrc_tcp_fsm(tcb, FSM_EVENT_CALL_OPEN, NULL, NULL, 0);
+    if (ret == -ENOMEM) {
+        TCP_DEBUG_ERROR("-ENOMEM: All receive buffers are in use.");
+    }
+    else if (ret == -EADDRINUSE) {
+        TCP_DEBUG_ERROR("-EADDRINUSE: local_port is already in use.");
+    }
+
+    /* Wait until a connection was established or closed */
+    while (ret >= 0 && tcb->state != FSM_STATE_CLOSED && tcb->state != FSM_STATE_ESTABLISHED &&
+           tcb->state != FSM_STATE_CLOSE_WAIT) {
+        mbox_get(&mbox, &msg);
+        switch (msg.type) {
+            case MSG_TYPE_NOTIFY_USER:
+                TCP_DEBUG_INFO("Received MSG_TYPE_NOTIFY_USER.");
+                break;
+
+            case MSG_TYPE_CONNECTION_TIMEOUT:
+                TCP_DEBUG_INFO("Received MSG_TYPE_CONNECTION_TIMEOUT.");
+                _gnrc_tcp_fsm(tcb, FSM_EVENT_TIMEOUT_CONNECTION, NULL, NULL, 0);
+                TCP_DEBUG_ERROR("-ETIMEDOUT: Connection timed out.");
+                ret = -ETIMEDOUT;
+                break;
+
+            default:
+                TCP_DEBUG_ERROR("Received unexpected message.");
+        }
+    }
+
+    /* Cleanup */
+    _unsched_mbox(&tcb->event_misc);
+    _gnrc_tcp_fsm_set_mbox(tcb, NULL);
+    if (tcb->state == FSM_STATE_CLOSED && ret == 0) {
+        TCP_DEBUG_ERROR("-ECONNREFUSED: Connection was refused by peer.");
+        ret = -ECONNREFUSED;
+    }
+    mutex_unlock(&(tcb->function_lock));
+    TCP_DEBUG_LEAVE;
+    return ret;
 }
 
 int gnrc_tcp_listen(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *local)

@@ -130,7 +130,31 @@ void gnrc_tcp_tcb_init(gnrc_tcp_tcb_t *tcb);
 //int gnrc_tcp_open_active(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote,
 //                         uint16_t local_port);
 
-/* TODO: Add documentation */
+/**
+ * @brief Opens a connection.
+ *
+ * @pre gnrc_tcp_tcb_init() must have been successfully called.
+ * @pre @p tcb must not be NULL
+ * @pre @p remote must not be NULL.
+ *
+ * @note Blocks until a connection was established or an error occurred.
+ *
+ * @param[in,out] tcb          TCB for this connection.
+ * @param[in]     remote       Remote endpoint to connect to.
+ * @param[in]     local_port   If zero or PORT_UNSPEC, the connections source port
+ *                             is randomly selected. If local_port is non-zero
+ *                             it is used as source port.
+ *
+ * @return   0 on success.
+ * @return   -EAFNOSUPPORT if @p remote address_family is not supported.
+ * @return   -EINVAL if @p remote and @tcb address_family do not match
+ *                    or @p target_addr is invalid.
+ * @return   -EISCONN if @p tcb is already connected.
+ * @return   -ENOMEM if there are no receive buffer left to use for @p tcb.
+ * @return   -EADDRINUSE if @p local_port is already in use.
+ * @return   -ETIMEDOUT if the connection attempt timed out.
+ * @return   -ECONNREFUSED if the connection attempt was reset by the peer.
+ */
 int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t local_port);
 
 /* TODO: Add documentation */
