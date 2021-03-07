@@ -15,10 +15,13 @@
 #include "net/gnrc/tcp.h"
 
 #define MAIN_QUEUE_SIZE (8)
+#define TCB_QUEUE_SIZE (1)
 #define BUFFER_SIZE (2049)
 
 static msg_t main_msg_queue[MAIN_QUEUE_SIZE];
-static gnrc_tcp_tcb_t tcb;
+static gnrc_tcp_tcb_t tcbs[TCB_QUEUE_SIZE];
+static gnrc_tcp_tcb_t *tcb = tcbs;
+static gnrc_tcp_tcb_queue_t queue;
 static char buffer[BUFFER_SIZE];
 
 void dump_args(int argc, char **argv)
@@ -121,7 +124,12 @@ int gnrc_tcp_ep_from_str_cmd(int argc, char **argv)
 int gnrc_tcp_tcb_init_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
-    gnrc_tcp_tcb_init(&tcb);
+
+    // Initialize all given TCBs
+    for (int i = 0; i < TCB_QUEUE_SIZE; ++i)
+    {
+        gnrc_tcp_tcb_init(&(tcbs[i]));
+    }
     return 0;
 }
 
@@ -178,7 +186,7 @@ int gnrc_tcp_open_cmd(int argc, char **argv)
     gnrc_tcp_ep_from_str(&remote, argv[1]);
     uint16_t local_port = atol(argv[2]);
 
-    int err = gnrc_tcp_open(&tcb, &remote, local_port);
+    int err = gnrc_tcp_open(tcb, &remote, local_port);
     switch (err) {
         case -EAFNOSUPPORT:
             printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
@@ -254,7 +262,7 @@ int gnrc_tcp_listen_cmd(int argc, char **argv)
     gnrc_tcp_ep_t local;
     gnrc_tcp_ep_from_str(&local, argv[1]);
 
-    int err = gnrc_tcp_listen(&tcb, &local);
+    int err = gnrc_tcp_listen(&queue, tcbs, TCB_QUEUE_SIZE, &local);
     switch (err) {
         default:
             printf("%s: returns %d\n", argv[0], err);
@@ -267,7 +275,7 @@ int gnrc_tcp_accept_cmd(int argc, char **argv)
     /* TODO: Implement me */
     dump_args(argc, argv);
 
-    int err = gnrc_tcp_accept(&tcb);
+    int err = gnrc_tcp_accept(&queue, &tcb);
     switch (err) {
         default:
             printf("%s: returns %d\n", argv[0], err);
@@ -284,7 +292,7 @@ int gnrc_tcp_send_cmd(int argc, char **argv)
     size_t sent = 0;
 
     while (sent < to_send) {
-        int ret = gnrc_tcp_send(&tcb, buffer + sent, to_send - sent, timeout);
+        int ret = gnrc_tcp_send(tcb, buffer + sent, to_send - sent, timeout);
         switch (ret) {
             case -ENOTCONN:
                 printf("%s: returns -ENOTCONN\n", argv[0]);
@@ -318,7 +326,7 @@ int gnrc_tcp_recv_cmd(int argc, char **argv)
     size_t rcvd = 0;
 
     while (rcvd < to_receive) {
-        int ret = gnrc_tcp_recv(&tcb, buffer + rcvd, to_receive - rcvd,
+        int ret = gnrc_tcp_recv(tcb, buffer + rcvd, to_receive - rcvd,
                                 timeout);
         switch (ret) {
             case 0:
@@ -355,14 +363,14 @@ int gnrc_tcp_recv_cmd(int argc, char **argv)
 int gnrc_tcp_close_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
-    gnrc_tcp_close(&tcb);
+    gnrc_tcp_close(tcb);
     return 0;
 }
 
 int gnrc_tcp_abort_cmd(int argc, char **argv)
 {
     dump_args(argc, argv);
-    gnrc_tcp_abort(&tcb);
+    gnrc_tcp_abort(tcb);
     return 0;
 }
 
@@ -370,7 +378,7 @@ int gnrc_tcp_stop_listen_cmd(int argc, char **argv)
 {
     /* TODO: Implement me */
     dump_args(argc, argv);
-    gnrc_tcp_stop_listen(&tcb);
+    gnrc_tcp_stop_listen(&queue);
     return 0;
 }
 

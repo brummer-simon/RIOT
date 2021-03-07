@@ -78,6 +78,14 @@ typedef struct _transmission_control_block {
     struct _transmission_control_block *next;   /**< Pointer next TCB */
 } gnrc_tcp_tcb_t;
 
+/**
+ * @brief TODO: Document me
+ */
+typedef struct _transmission_control_block_queue {
+    gnrc_tcp_tcb_t *tcbs;
+    size_t          tcbs_len;
+} gnrc_tcp_tcb_queue_t;
+
 #ifdef __cplusplus
 }
 #endif
