@@ -42,7 +42,7 @@ extern "C" {
  * @brief TCB status flags
  * @{
  */
-#define STATUS_PASSIVE        (1 << 0)
+#define STATUS_LISTENING      (1 << 0)
 #define STATUS_ALLOW_ANY_ADDR (1 << 1)
 #define STATUS_NOTIFY_USER    (1 << 2)
 /** @} */

@@ -158,6 +158,8 @@ void gnrc_tcp_tcb_init(gnrc_tcp_tcb_t *tcb);
 int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t local_port);
 
 /* TODO: Add documentation */
+/* NOTE: Important precondition: gnrc_tcp_tcb_init must have been called on tcbs before usage...*/ 
+ 
 int gnrc_tcp_listen(gnrc_tcp_tcb_queue_t *queue, gnrc_tcp_tcb_t *tcbs, size_t tcbs_len,
                     const gnrc_tcp_ep_t *local);
 

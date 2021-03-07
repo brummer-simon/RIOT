@@ -262,8 +262,24 @@ int gnrc_tcp_listen_cmd(int argc, char **argv)
     gnrc_tcp_ep_t local;
     gnrc_tcp_ep_from_str(&local, argv[1]);
 
-    int err = gnrc_tcp_listen(&queue, tcbs, TCB_QUEUE_SIZE, &local);
+    int err = gnrc_tcp_listen(&queue, tcbs, sizeof(tcbs)/sizeof(tcbs[0]), &local);
     switch (err) {
+        case -EAFNOSUPPORT:
+            printf("%s: returns -EAFNOSUPPORT\n", argv[0]);
+            break;
+
+        case -EINVAL:
+            printf("%s: returns -EINVAL\n", argv[0]);
+            break;
+
+        case -EISCONN:
+            printf("%s: returns -EISCONN\n", argv[0]);
+            break;
+
+        case -ENOMEM:
+            printf("%s: returns -ENOMEM\n", argv[0]);
+            break;
+
         default:
             printf("%s: returns %d\n", argv[0], err);
     }

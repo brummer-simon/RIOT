@@ -601,17 +601,94 @@ int gnrc_tcp_open(gnrc_tcp_tcb_t *tcb, const gnrc_tcp_ep_t *remote, uint16_t loc
 int gnrc_tcp_listen(gnrc_tcp_tcb_queue_t *queue, gnrc_tcp_tcb_t *tcbs, size_t tcbs_len,
                     const gnrc_tcp_ep_t *local)
 {
-    /* TODO: Implement me */
-    (void) queue;
-    (void) tcbs;
-    (void) tcbs_len;
-    (void) local;
-    return -1;
+    /* Sanity checks */
+    assert(queue != NULL);
+    assert(tcbs != NULL);
+    assert(tcbs_len > 0);
+    assert(local != NULL);
+    assert(local->port != PORT_UNSPEC);
+
+    int ret = 0;
+
+    /* Verfiy given endpoint */
+#ifdef MODULE_GNRC_IPV6
+    if (local->family != AF_INET6) {
+        TCP_DEBUG_ERROR("-EAFNOSUPPORT: AF-Family not supported.");
+        TCP_DEBUG_LEAVE;
+        return -EAFNOSUPPORT;
+    }
+#else
+    TCP_DEBUG_ERROR("-EAFNOSUPPORT: AF-Family not supported.");
+    TCP_DEBUG_LEAVE;
+    return -EAFNOSUPPORT;
+#endif
+
+    /* Protect TCBs against usage in other TCP functions */
+    for (size_t i = 0; i < tcbs_len; ++i) {
+        mutex_lock(&(tcbs[i].function_lock));
+    }
+
+    /* Setup and verify each TCB */
+    for (size_t i = 0; i < tcbs_len; ++i) {
+        gnrc_tcp_tcb_t *tcb = &(tcbs[i]);
+
+        /* Verify current TCB */
+        if (tcb->address_family != local->family) {
+            TCP_DEBUG_ERROR("-EINVAL: local and remote AF-Family don't match.");
+            ret = -EINVAL;
+        }
+        else if (tcb->state != FSM_STATE_CLOSED) {
+            TCP_DEBUG_ERROR("-EISCONN: tcb is already connected.");
+            ret = -EISCONN;
+        }
+
+        /* Setup TCB for incoming connections attempts */
+        if (!ret)
+        {
+#ifdef MODULE_GNRC_IPV6
+            if (tcb->address_family == AF_INET6) {
+                memcpy(tcb->local_addr, local->addr.ipv6, sizeof(tcb->local_addr));
+
+                if (ipv6_addr_is_unspecified((ipv6_addr_t *) tcb->local_addr)) {
+                    tcb->status |= STATUS_ALLOW_ANY_ADDR;
+                }
+            }
+#endif
+            tcb->local_port = local->port;
+            tcb->status |= STATUS_LISTENING;
+
+            /* Open connection */
+            ret = _gnrc_tcp_fsm(tcb, FSM_EVENT_CALL_OPEN, NULL, NULL, 0);
+        }
+
+        /* If anything goes wrong, discard all potentially opened connections. */
+        if (ret) {
+            for (size_t j = 0; j <= i; ++j) {
+                tcb->status &= ~(STATUS_LISTENING);
+                _gnrc_tcp_fsm(&(tcbs[j]), FSM_EVENT_CALL_ABORT, NULL, NULL, 0);
+            }
+        }
+    }
+
+    /* If everything went well: setup queue and unlock all TCBs */
+    if (!ret) {
+        queue->tcbs = tcbs;
+        queue->tcbs_len = tcbs_len;
+    }
+
+    for (size_t i = 0; i < tcbs_len; ++i) {
+        mutex_unlock(&(tcbs[i].function_lock));
+    }
+    TCP_DEBUG_LEAVE;
+    return ret;
 }
 
 int gnrc_tcp_accept(gnrc_tcp_tcb_queue_t *queue, gnrc_tcp_tcb_t **tcb)
 {
     /* TODO: Implement me */
+    /* Check if any connection is read and not accepted */
+    /* Note: Only lock TCBs that are not accepted otherwise those
+       would become unusable */
     (void) queue;
     (void) tcb;
     return -1;
