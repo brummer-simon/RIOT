@@ -68,6 +68,7 @@ typedef struct _transmission_control_block {
     int32_t rto;           /**< Retransmission timeout duration */
     uint8_t retries;       /**< Number of retransmissions */
     evtimer_msg_event_t event_retransmit; /**< Retransmission event */
+    evtimer_msg_event_t event_timeout;    /**< Timeout event */
     evtimer_mbox_event_t event_misc;      /**< General purpose event */
     gnrc_pktsnip_t *pkt_retransmit;       /**< Pointer to packet in "retransmit queue" */
     mbox_t *mbox;            /**< TCB mbox for synchronization */

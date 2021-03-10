@@ -111,8 +111,8 @@ static int _clear_retransmit(gnrc_tcp_tcb_t *tcb)
 static int _restart_timewait_timer(gnrc_tcp_tcb_t *tcb)
 {
     TCP_DEBUG_ENTER;
-    _gnrc_tcp_eventloop_unsched(&tcb->event_retransmit);
-    _gnrc_tcp_eventloop_sched(&tcb->event_retransmit, 2 * CONFIG_GNRC_TCP_MSL_MS,
+    _gnrc_tcp_eventloop_unsched(&tcb->event_timeout);
+    _gnrc_tcp_eventloop_sched(&tcb->event_timeout, 2 * CONFIG_GNRC_TCP_MSL_MS,
                               MSG_TYPE_TIMEWAIT, tcb);
     TCP_DEBUG_LEAVE;
     return 0;
